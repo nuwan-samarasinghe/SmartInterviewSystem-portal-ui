@@ -24,7 +24,7 @@ const Interviewers = () => {
         <div className={classes.root}>
             <Grid container spacing={3}>
                 <Grid item sm={6}>
-                   <NewInterviewer/>
+                    <NewInterviewer/>
                 </Grid>
                 <Grid item sm={6}>
                     <AvailableInterviewers/>
@@ -36,5 +36,7 @@ const Interviewers = () => {
         </div>
     );
 }
+
+
 
 export default Interviewers;

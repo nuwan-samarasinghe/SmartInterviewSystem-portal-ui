@@ -14,6 +14,9 @@ import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import SaveIcon from '@material-ui/icons/Save';
 import Grid from "@material-ui/core/Grid";
+import {connect} from "react-redux";
+import {addInterviewer} from "../../actions/RootActions";
+import {addNewInterviewer, getInterviewers} from "../../services/InterviewerService";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -72,10 +75,16 @@ function getStyles(name, personName, theme) {
     };
 }
 
-const NewInterviewer = () => {
+const NewInterviewer = (props) => {
 
     const classes = useStyles();
     const theme = useTheme();
+
+    const [state, setState] = React.useState({
+        firstName: '',
+        lastName: '',
+        position: ''
+    });
 
     const technologyStacks = [
         'Java',
@@ -85,9 +94,22 @@ const NewInterviewer = () => {
     ];
     const [technologyStack, setTechnologyStack] = React.useState([]);
 
-    const handleChange = (event) => {
+    const handleStackChange = (event) => {
         setTechnologyStack(event.target.value);
     };
+
+    const handleAddInterviewer = (event) => {
+        // event.preventDefault();
+        addNewInterviewer(state.firstName, state.lastName, state.position).then(interviewer => {
+                props.addInterviewer(interviewer.id, interviewer.firstName, interviewer.lastName, interviewer.position)
+            }
+        );
+    }
+
+    const handleChange = (event) => {
+        setState({...state, [event.target.name]: event.target.value});
+    };
+
     const [open, setOpen] = React.useState(false);
     const [avatarPath, setAvatarPath] = React.useState("");
     const [fileObjects, setFileObjects] = React.useState([]);
@@ -97,91 +119,110 @@ const NewInterviewer = () => {
             <Typography variant="h6" className={classes.title}>
                 Add new Interviewer
             </Typography>
-            <Grid container spacing={3} >
-                <Grid item sm={6} xs={12}>
-                    <FormControl className={classes.formControl}>
-                        <Avatar alt="Remy Sharp"
-                                src={avatarPath}
-                                className={classes.avatar}
-                                onClick={() => setOpen(true)}
-                        />
-                        <DropzoneDialogBase
-                            acceptedFiles={['image/*']}
-                            fileObjects={fileObjects}
-                            cancelButtonText={"cancel"}
-                            submitButtonText={"submit"}
-                            maxFileSize={5000000}
-                            open={open}
-                            onAdd={newFileObjs => {
-                                console.log('onAdd', newFileObjs);
-                                setFileObjects([].concat(fileObjects, newFileObjs));
-                            }}
-                            onDelete={deleteFileObj => {
-                                console.log('onDelete', deleteFileObj);
-                            }}
-                            onClose={() => setOpen(false)}
-                            onSave={() => {
-                                console.log('onSave', fileObjects);
-                                setOpen(false);
-                                setAvatarPath(fileObjects[0].file.path)
-                            }}
-                            showPreviews={true}
-                            showFileNamesInPreview={true}
-                        />
-                    </FormControl>
+            <form className={classes.root} noValidate autoComplete="off" onSubmit={handleAddInterviewer}>
+                <Grid container spacing={3}>
+                    <Grid item sm={6} xs={12}>
+                        <FormControl className={classes.formControl}>
+                            <Avatar alt="Remy Sharp"
+                                    src={avatarPath}
+                                    className={classes.avatar}
+                                    onClick={() => setOpen(true)}
+                            />
+                            <DropzoneDialogBase
+                                acceptedFiles={['image/*']}
+                                fileObjects={fileObjects}
+                                cancelButtonText={"cancel"}
+                                submitButtonText={"submit"}
+                                maxFileSize={5000000}
+                                open={open}
+                                onAdd={newFileObjs => {
+                                    console.log('onAdd', newFileObjs);
+                                    setFileObjects([].concat(fileObjects, newFileObjs));
+                                }}
+                                onDelete={deleteFileObj => {
+                                    console.log('onDelete', deleteFileObj);
+                                }}
+                                onClose={() => setOpen(false)}
+                                onSave={() => {
+                                    console.log('onSave', fileObjects);
+                                    setOpen(false);
+                                    setAvatarPath(fileObjects[0].file.path)
+                                }}
+                                showPreviews={true}
+                                showFileNamesInPreview={true}
+                            />
+                        </FormControl>
+                    </Grid>
+                    <Grid item sm={6} xs={12}>
+                        <FormControl className={classes.formControl}>
+                            <TextField id="first-name" name={"firstName"} fullWidth label="First Name"
+                                       onChange={handleChange}/>
+                        </FormControl>
+                        <FormControl className={classes.formControl}>
+                            <TextField id="last-name" name={"lastName"} fullWidth label="Last Name"
+                                       onChange={handleChange}/>
+                        </FormControl>
+                        <FormControl className={classes.formControl}>
+                            <TextField id="designation" fullWidth name={"position"} label="Designation"
+                                       onChange={handleChange}/>
+                        </FormControl>
+                        <FormControl className={classes.formControl}>
+                            <InputLabel id="technologies">Technologies special in</InputLabel>
+                            <Select
+                                labelId="technologies"
+                                id="technologies-special-in"
+                                multiple
+                                fullWidth
+                                value={technologyStack}
+                                onChange={handleStackChange}
+                                input={<Input id="select-technologies"/>}
+                                renderValue={(selected) => (
+                                    <div className={classes.chips}>
+                                        {selected.map((value) => (
+                                            <Chip key={value} label={value} className={classes.chip}/>
+                                        ))}
+                                    </div>
+                                )}
+                                MenuProps={MenuProps}
+                            >
+                                {technologyStacks.map((name) => (
+                                    <MenuItem key={name} value={name} style={getStyles(name, technologyStack, theme)}>
+                                        {name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl className={classes.formControl}>
+                            <Button
+                                type={"submit"}
+                                variant="contained"
+                                color="primary"
+                                size="large"
+                                className={classes.button}
+                                startIcon={<SaveIcon/>}
+                            >
+                                Save
+                            </Button>
+                        </FormControl>
+                    </Grid>
                 </Grid>
-                <Grid item sm={6} xs={12}>
-                    <FormControl className={classes.formControl}>
-                        <TextField id="full-name" fullWidth label="Full Name"/>
-                    </FormControl>
-                    <FormControl className={classes.formControl}>
-                        <TextField id="designation" fullWidth label="Designation"/>
-                    </FormControl>
-                    <FormControl className={classes.formControl}>
-                        <InputLabel id="technologies">Technologies special in</InputLabel>
-                        <Select
-                            labelId="technologies"
-                            id="technologies-special-in"
-                            multiple
-                            fullWidth
-                            value={technologyStack}
-                            onChange={handleChange}
-                            input={<Input id="select-technologies"/>}
-                            renderValue={(selected) => (
-                                <div className={classes.chips}>
-                                    {selected.map((value) => (
-                                        <Chip key={value} label={value} className={classes.chip}/>
-                                    ))}
-                                </div>
-                            )}
-                            MenuProps={MenuProps}
-                        >
-                            {technologyStacks.map((name) => (
-                                <MenuItem key={name} value={name} style={getStyles(name, technologyStack, theme)}>
-                                    {name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControl className={classes.formControl}>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            size="large"
-                            className={classes.button}
-                            startIcon={<SaveIcon/>}
-                        >
-                            Save
-                        </Button>
-                    </FormControl>
-                </Grid>
-            </Grid>
-            <form className={classes.root} noValidate autoComplete="off">
-
-
             </form>
         </Paper>
     )
 }
 
-export default NewInterviewer;
+const mapStateToProps = (state, ownProps) => {
+    return {
+        interviewers: state.interviewers
+    }
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        addInterviewer: (id, firstName, lastName, designation) => {
+            dispatch(addInterviewer(id, firstName, lastName, designation))
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(NewInterviewer);

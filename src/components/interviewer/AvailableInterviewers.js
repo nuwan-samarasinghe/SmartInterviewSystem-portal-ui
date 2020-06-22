@@ -14,6 +14,10 @@ import UpdateIcon from '@material-ui/icons/Update';
 import AssignmentIcon from "@material-ui/icons/Assignment";
 import Tooltip from "@material-ui/core/Tooltip";
 import DeleteIcon from "@material-ui/icons/Delete";
+import {loadInterviewers} from "../../actions/RootActions";
+import {connect} from "react-redux";
+import lifecycle from 'react-pure-lifecycle';
+import {getInterviewers} from "../../services/InterviewerService";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -25,62 +29,78 @@ const useStyles = makeStyles((theme) => ({
         padding: theme.spacing(2),
         textAlign: 'center',
         color: theme.palette.text.secondary,
-    },    inline: {
+    }, inline: {
         display: 'inline',
     },
 }));
 
-const AvailableInterviewers = () => {
+let loaded = false;
+
+const AvailableInterviewers = (props) => {
+
+    if (!loaded) {
+        getInterviewers().then(res => {
+            props.loadInterviewers(res);
+        });
+        loaded = true;
+    }
 
     const classes = useStyles();
+    const interviewers = props.interviewers;
+    console.log(interviewers);
+    const interviewerComList = interviewers.length ? (interviewers.map(interviewer => {
+        console.log(interviewer);
+        return (
+            <ListItem key={interviewer.id}>
+                <ListItemAvatar>
+                    <Avatar>
+                        <Avatar alt="Travis Howard" src="/static/images/avatar/2.jpg"/>
+                    </Avatar>
+                </ListItemAvatar>
+                <ListItemText primary={interviewer.firstName + " " + interviewer.lastName}
+                              secondary={interviewer.designation}/>
+                <ListItemSecondaryAction>
+                    <Tooltip title="Update" arrow>
+                        <IconButton edge="end" aria-label="update">
+                            <UpdateIcon color="action"/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete" arrow>
+                        <IconButton edge="end" aria-label="delete">
+                            <DeleteIcon color="secondary"/>
+                        </IconButton>
+                    </Tooltip>
+                </ListItemSecondaryAction>
+            </ListItem>
+        )
+    })) : (
+        <Typography className={classes.title}>
+            No Available Interviewers
+        </Typography>
+    );
 
     return (
         <Paper className={classes.paper}>
             <Typography variant="h6" className={classes.title}>
                 Available Interviewers
             </Typography>
-            <ListItem>
-                <ListItemAvatar>
-                    <Avatar>
-                        <Avatar alt="Travis Howard" src="/static/images/avatar/2.jpg" />
-                    </Avatar>
-                </ListItemAvatar>
-                <ListItemText primary="Some Interviewer Name" secondary="Architect - Technology" />
-                <ListItemSecondaryAction>
-                    <Tooltip title="Update" arrow>
-                        <IconButton edge="end" aria-label="update">
-                            <UpdateIcon color="action" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete" arrow>
-                        <IconButton edge="end" aria-label="delete">
-                            <DeleteIcon color="secondary"/>
-                        </IconButton>
-                    </Tooltip>
-                </ListItemSecondaryAction>
-            </ListItem>
-            <ListItem>
-                <ListItemAvatar>
-                    <Avatar>
-                        <Avatar alt="Travis Howard" src="/static/images/avatar/2.jpg" />
-                    </Avatar>
-                </ListItemAvatar>
-                <ListItemText primary="Some Interviewer Name" secondary="Architect - Technology" />
-                <ListItemSecondaryAction>
-                    <Tooltip title="Update" arrow>
-                        <IconButton edge="end" aria-label="update">
-                            <UpdateIcon color="action" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete" arrow>
-                        <IconButton edge="end" aria-label="delete">
-                            <DeleteIcon color="secondary"/>
-                        </IconButton>
-                    </Tooltip>
-                </ListItemSecondaryAction>
-            </ListItem>
+            {interviewerComList}
         </Paper>
     )
 }
 
-export default AvailableInterviewers;
+const mapStateToProps = (state, ownProps) => {
+    return {
+        interviewers: state.interviewers
+    }
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        loadInterviewers: (interviewers) => {
+            dispatch(loadInterviewers(interviewers))
+        }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(AvailableInterviewers);
